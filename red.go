@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/hkdf"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -16,6 +17,7 @@ func main() {
 	// Define command-line flags
 	passwordFlag := flag.String("p", "", "Password for Argon2id hashing.")
 	saltFlag := flag.String("s", "", "Salt for Argon2id hashing.")
+	writeFlag := flag.Bool("w", false, "Write keys to files.")
 
 	// Set up a usage message
 	flag.Usage = func() {
@@ -43,5 +45,19 @@ func main() {
 	// Output the resulting Ed25519 key pair in hex notation
 	fmt.Println("Public Key:", hex.EncodeToString(pubKey))
 	fmt.Println("Private Key:", hex.EncodeToString(privKey))
-}
 
+	// Write keys to files if -w flag is set
+	if *writeFlag {
+		err := ioutil.WriteFile("pubkey", []byte(hex.EncodeToString(pubKey)), 0644)
+		if err != nil {
+			fmt.Println("Error writing public key to file:", err)
+			os.Exit(1)
+		}
+
+		err = ioutil.WriteFile("seckey", []byte(hex.EncodeToString(privKey)), 0644)
+		if err != nil {
+			fmt.Println("Error writing private key to file:", err)
+			os.Exit(1)
+		}
+	}
+}
