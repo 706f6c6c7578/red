@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/pem"
 	"flag"
 	"fmt"
 	"golang.org/x/crypto/argon2"
@@ -18,6 +19,7 @@ func main() {
 	passwordFlag := flag.String("p", "", "Password for Argon2id hashing.")
 	saltFlag := flag.String("s", "", "Salt for Argon2id hashing.")
 	writeFlag := flag.Bool("w", false, "Write keys to files.")
+	writePEMFlag := flag.Bool("wp", false, "Write keys to PEM files.")
 
 	// Set up a usage message
 	flag.Usage = func() {
@@ -48,16 +50,40 @@ func main() {
 
 	// Write keys to files if -w flag is set
 	if *writeFlag {
-		err := ioutil.WriteFile("pubkey", []byte(hex.EncodeToString(pubKey)), 0644)
+		err := ioutil.WriteFile("public", []byte(hex.EncodeToString(pubKey)), 0644)
 		if err != nil {
 			fmt.Println("Error writing public key to file:", err)
 			os.Exit(1)
 		}
 
-		err = ioutil.WriteFile("seckey", []byte(hex.EncodeToString(privKey)), 0644)
+		err = ioutil.WriteFile("private", []byte(hex.EncodeToString(privKey)), 0644)
 		if err != nil {
 			fmt.Println("Error writing private key to file:", err)
 			os.Exit(1)
 		}
 	}
+
+	// Write keys to PEM files if -wp flag is set
+	if *writePEMFlag {
+		pubPEM := &pem.Block{
+			Type:  "PUBLIC KEY",
+			Bytes: pubKey,
+		}
+		err := ioutil.WriteFile("public.pem", pem.EncodeToMemory(pubPEM), 0644)
+		if err != nil {
+			fmt.Println("Error writing public key PEM to file:", err)
+			os.Exit(1)
+		}
+
+		privPEM := &pem.Block{
+			Type:  "PRIVATE KEY",
+			Bytes: privKey,
+		}
+		err = ioutil.WriteFile("private.pem", pem.EncodeToMemory(privPEM), 0644)
+		if err != nil {
+			fmt.Println("Error writing private key PEM to file:", err)
+			os.Exit(1)
+		}
+	}
 }
+
